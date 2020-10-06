@@ -40,6 +40,7 @@
 #include <vfscore/fs.h>
 #include <vfscore/mount.h>
 #include <vfscore/vnode.h>
+#include <vfscore/poll.h>
 #include <uk/wait.h>
 #include <sys/ioctl.h>
 
@@ -421,6 +422,7 @@ static int pipe_ioctl(struct vnode *vnode,
 #define pipe_readlink    ((vnop_readlink_t) vfscore_vop_einval)
 #define pipe_symlink     ((vnop_symlink_t) vfscore_vop_eperm)
 #define pipe_fallocate   ((vnop_fallocate_t) vfscore_vop_nullop)
+#define pipe_poll	 (vfscore_nopoll)
 
 static struct vnops pipe_vnops = {
 	.vop_open      = pipe_open,
@@ -445,7 +447,8 @@ static struct vnops pipe_vnops = {
 	.vop_cache     = pipe_cache,
 	.vop_fallocate = pipe_fallocate,
 	.vop_readlink  = pipe_readlink,
-	.vop_symlink   = pipe_symlink
+	.vop_symlink   = pipe_symlink,
+	.vop_poll      = pipe_poll
 };
 
 #define pipe_vget  ((vfsop_vget_t) vfscore_vop_nullop)

@@ -42,6 +42,7 @@
 #include <unistd.h>
 #include <vfscore/uio.h>
 #include <vfscore/vnode.h>
+#include <vfscore/poll.h>
 #include <vfscore/mount.h>
 
 static int __write_fn(void *dst __unused, void *src, size_t *cnt)
@@ -159,6 +160,7 @@ stdio_getattr(struct vnode *vnode __unused, struct vattr *attr __unused)
 #define stdio_fallocate	((vnop_fallocate_t)vfscore_vop_nullop)
 #define stdio_readlink	((vnop_readlink_t)vfscore_vop_nullop)
 #define stdio_symlink	((vnop_symlink_t)vfscore_vop_nullop)
+#define stdio_poll	(vfscore_nopoll)
 
 static struct vnops stdio_vnops = {
 	stdio_open,		/* open */
@@ -184,6 +186,7 @@ static struct vnops stdio_vnops = {
 	stdio_fallocate,	/* fallocate */
 	stdio_readlink,		/* read link */
 	stdio_symlink,		/* symbolic link */
+	stdio_poll,		/* poll */
 };
 
 static struct vnode stdio_vnode = {

@@ -46,6 +46,7 @@
 
 #include <uk/page.h>
 #include <vfscore/vnode.h>
+#include <vfscore/poll.h>
 #include <vfscore/mount.h>
 #include <vfscore/uio.h>
 #include <vfscore/file.h>
@@ -643,6 +644,7 @@ ramfs_setattr(struct vnode *vnode, struct vattr *attr)
 #define ramfs_inactive  ((vnop_inactive_t)vfscore_vop_nullop)
 #define ramfs_link      ((vnop_link_t)vfscore_vop_eperm)
 #define ramfs_fallocate ((vnop_fallocate_t)vfscore_vop_nullop)
+#define ramfs_poll	 (vfscore_nopoll)
 
 /*
  * vnode operations
@@ -671,5 +673,6 @@ struct vnops ramfs_vnops = {
 		ramfs_fallocate,        /* fallocate */
 		ramfs_readlink,         /* read link */
 		ramfs_symlink,          /* symbolic link */
+		ramfs_poll		/* poll */
 };
 

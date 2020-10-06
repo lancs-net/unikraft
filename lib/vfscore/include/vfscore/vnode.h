@@ -41,6 +41,7 @@
 #include <time.h>
 #include <vfscore/uio.h>
 #include <vfscore/dentry.h>
+#include <vfscore/poll.h>
 
 struct vfsops;
 struct vnops;
@@ -171,6 +172,8 @@ typedef int (*vnop_cache_t) (struct vnode *, struct vfscore_file *, struct uio *
 typedef int (*vnop_fallocate_t) (struct vnode *, int, off_t, off_t);
 typedef int (*vnop_readlink_t)  (struct vnode *, struct uio *);
 typedef int (*vnop_symlink_t)   (struct vnode *, char *, char *);
+typedef int (*vnop_poll_t)      (struct vnode *, struct vfscore_file *, short,
+				 struct uk_list_head *, int);
 
 /*
  * vnode operations
@@ -199,6 +202,7 @@ struct vnops {
 	vnop_fallocate_t	vop_fallocate;
 	vnop_readlink_t		vop_readlink;
 	vnop_symlink_t		vop_symlink;
+	vnop_poll_t		vop_poll;
 };
 
 /*
@@ -228,6 +232,7 @@ struct vnops {
 #define VOP_FALLOCATE(VP, M, OFF, LEN) ((VP)->v_op->vop_fallocate)(VP, M, OFF, LEN)
 #define VOP_READLINK(VP, U)        ((VP)->v_op->vop_readlink)(VP, U)
 #define VOP_SYMLINK(DVP, OP, NP)   ((DVP)->v_op->vop_symlink)(DVP, OP, NP)
+#define VOP_POLL(VP, VF, E, WT, A) ((VP)->v_op->vop_poll)(VP, VF, E, WT, A)
 
 int	 vfscore_vop_nullop(void);
 int	 vfscore_vop_einval(void);
