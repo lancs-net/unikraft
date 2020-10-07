@@ -404,6 +404,47 @@ static int pipe_ioctl(struct vnode *vnode,
 	}
 }
 
+static int
+pipe_poll(struct vnode * vnode, struct vfscore_file * vfs __unused,
+		short events, struct uk_list_head * wtable, int addq)
+{
+	struct pipe_file *pipe_file = vnode->v_data;
+	struct pipe_buf *pipe_buf = pipe_file->buf;
+	int ret = 0, err;
+
+	switch (events) {
+		case (POLLIN):
+			if (pipe_buf_can_read(pipe_buf)) {
+				ret += POLLIN;
+			} else if (addq) {
+				err = vfscore_wtable_add(wtable, &pipe_buf->rdwq);
+				if (err) {
+					POLL_SET_ERRNO(err);
+					ret = -1;
+					break;
+				}
+			}
+			break;
+		case (POLLOUT):
+			if (pipe_buf_can_write(pipe_buf)) {
+				ret += POLLOUT;
+			} else if (addq) {
+				err = vfscore_wtable_add(wtable, &pipe_buf->wrwq);
+				if (err) {
+					POLL_SET_ERRNO(err);
+					ret = -1;
+					break;
+				}
+			}
+			break;
+		default:
+			POLL_SET_ERRNO(-EBADF);
+			ret = -1;
+	}
+
+	return ret;
+}
+
 #define pipe_open        ((vnop_open_t) vfscore_vop_einval)
 #define pipe_fsync       ((vnop_fsync_t) vfscore_vop_nullop)
 #define pipe_readdir     ((vnop_readdir_t) vfscore_vop_einval)
@@ -422,7 +463,6 @@ static int pipe_ioctl(struct vnode *vnode,
 #define pipe_readlink    ((vnop_readlink_t) vfscore_vop_einval)
 #define pipe_symlink     ((vnop_symlink_t) vfscore_vop_eperm)
 #define pipe_fallocate   ((vnop_fallocate_t) vfscore_vop_nullop)
-#define pipe_poll	 (vfscore_nopoll)
 
 static struct vnops pipe_vnops = {
 	.vop_open      = pipe_open,
