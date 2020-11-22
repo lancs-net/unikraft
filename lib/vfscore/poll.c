@@ -189,3 +189,111 @@ end:
 	uk_pr_debug("poll() returning %d\n", ret);
 	return ret;
 }
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+	   struct timeval *timeout)
+{
+	int num_sockets = 0, poll_timeout, ret = 0;
+
+	/* overestimate array size.
+	 * TODO this can be optimized and forbids us a stack allocation */
+	struct pollfd *pfd = malloc(nfds * sizeof(struct pollfd));
+
+	if (!pfd) {
+		uk_pr_debug("select() could not alloc enough memory for pfd\n");
+		return -1;
+	}
+
+	/* prepare poll arguments */
+	for (int i = 0, incremented; i < nfds; i++) {
+		incremented = 0;
+
+		if (readfds && FD_ISSET(i, readfds)) {
+			incremented = 1;
+			num_sockets++;
+			pfd[num_sockets - 1].fd = i;
+			pfd[num_sockets - 1].events = 0;
+			pfd[num_sockets - 1].revents = 0;
+			pfd[num_sockets - 1].events |= POLLIN;
+		}
+
+		if (writefds && FD_ISSET(i, writefds)) {
+			if (!incremented) {
+				incremented = 1;
+				num_sockets++;
+				pfd[num_sockets - 1].fd = i;
+				pfd[num_sockets - 1].events = 0;
+				pfd[num_sockets - 1].revents = 0;
+			}
+			pfd[num_sockets - 1].events |= POLLOUT;
+		}
+
+		if (exceptfds && FD_ISSET(i, exceptfds)) {
+			if (!incremented) {
+				incremented = 1;
+				num_sockets++;
+				pfd[num_sockets - 1].fd = i;
+				pfd[num_sockets - 1].events = 0;
+				pfd[num_sockets - 1].revents = 0;
+			}
+			pfd[num_sockets - 1].events |= POLLERR;
+		}
+	}
+
+	if (!timeout) {
+		/* no timeout */
+		poll_timeout = -1;
+	} else if (!timeout->tv_sec && !timeout->tv_usec) {
+		/* don't block */
+		poll_timeout = 0;
+	} else {
+		/* timeout specified */
+		poll_timeout = timeout->tv_sec * 1000 + timeout->tv_usec;
+	}
+
+	ret = poll(pfd, num_sockets, poll_timeout);
+
+	/* translate poll return value */
+	if (ret < 0) {
+		/* error: no need to update fd sets, they are undefined
+		 * according to POSIX. For ret = 0 we still need to update
+		 * them */
+		goto EXIT;
+	}
+
+	if (readfds)
+		FD_ZERO(readfds);
+	if (writefds)
+		FD_ZERO(writefds);
+	if (exceptfds)
+		FD_ZERO(exceptfds);
+
+	if (ret == 0) {
+		/* timeout, we're done */
+		goto EXIT;
+	}
+
+	ret = 0;
+
+	for (int i = 0; i < num_sockets; i++) {
+		if (readfds && (pfd[i].events & POLLIN) &&
+			(pfd[i].revents & POLLIN)) {
+			FD_SET(pfd[i].fd, readfds);
+			ret++;
+		}
+		if (writefds && (pfd[i].events & POLLOUT) &&
+			(pfd[i].revents & POLLOUT)) {
+			FD_SET(pfd[i].fd, writefds);
+			ret++;
+		}
+		if (exceptfds && (pfd[i].events & POLLERR) &&
+			(pfd[i].revents & POLLERR)) {
+			FD_SET(pfd[i].fd, exceptfds);
+			ret++;
+		}
+	}
+
+EXIT:
+	free(pfd);
+	return ret;
+}
