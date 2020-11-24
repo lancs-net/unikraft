@@ -190,6 +190,43 @@ end:
 	return ret;
 }
 
+#if CONFIG_LIBPTHREAD_EMBEDDED
+#define __sigmask   pthread_sigmask
+#else
+#define __sigmask   sigprocmask
+#endif
+#define SIG_SETMASK 2
+
+int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts,
+	  const sigset_t *sigmask)
+{
+	sigset_t origmask;
+	int timeout, rc, _rc;
+
+	if (!fds) {
+		errno = EFAULT;
+		rc = -1;
+		goto out;
+	}
+
+	timeout = (timeout_ts == NULL) ? -1 : (timeout_ts->tv_sec * 1000 +
+			timeout_ts->tv_nsec / 1000000);
+
+	rc = __sigmask(SIG_SETMASK, sigmask, &origmask);
+
+	if (rc)
+		goto out;
+
+	rc = poll(fds, nfds, timeout);
+
+	_rc = __sigmask(SIG_SETMASK, &origmask, NULL);
+
+	if (rc == 0 && _rc != 0)
+		rc = _rc;
+out:
+	return rc;
+}
+
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 	   struct timeval *timeout)
 {

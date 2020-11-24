@@ -16,6 +16,7 @@ open
 creat
 write
 poll
+ppoll
 select
 vfscore_nopoll
 uk_syscall_e_write
