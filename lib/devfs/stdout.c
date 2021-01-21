@@ -62,9 +62,6 @@ static int __write_fn(void *dst __unused, void *src, size_t *cnt)
 int dev_stdout_write(struct device *dev __unused, struct uio *uio,
 		   int flags __unused)
 {
-	if (uio->uio_offset)
-		return ESPIPE;
-
 	return vfscore_uioforeach(__write_fn, NULL, uio->uio_resid, uio);
 }
 
