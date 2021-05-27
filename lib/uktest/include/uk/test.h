@@ -343,4 +343,217 @@ _uk_test_do_assert(struct uk_testcase *esac, bool cond, const char *fmt, ...)
 #define UK_TEST_ASSERTF(esac, cond, fmt, ...) \
 	_uk_test_do_assert(esac, cond, fmt, ##__VA_ARGS__)
 
+/**
+ * Expect a condition to be true.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param cond
+ *   The boolean condition which will render at runtime.
+ */
+#define UK_TEST_EXPECT(esac, cond)					\
+	UK_TEST_ASSERTF(esac,						\
+		cond,							\
+		"expected `" STRINGIFY(cond) "` to be true"		\
+	)
+
+/**
+ * Expect an expression to be NULL.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param exp
+ *   The expression under consideration.s
+ */
+#define UK_TEST_EXPECT_NULL(esac, exp)					\
+	UK_TEST_ASSERTF(esac,						\
+		exp == NULL,						\
+		"expected `" STRINGIFY(exp) "` to be NULL"		\
+	)
+
+/**
+ * Expect an expression to not be NULL.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param exp
+ *   The expression under consideration.s
+ */
+#define UK_TEST_EXPECT_NOT_NULL(esac, exp)				\
+	UK_TEST_ASSERTF(esac,						\
+		exp != NULL,						\
+		"expected `" STRINGIFY(exp) "` to not be NULL"		\
+	)
+
+/**
+ * Expect an expression to be evaluate to zero.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param exp
+ *   The expression under consideration.s
+ */
+#define UK_TEST_EXPECT_ZERO(esac, exp)					\
+	UK_TEST_ASSERTF(esac,						\
+		exp == 0,						\
+		"expected `" STRINGIFY(exp) "` to be zero"		\
+	)
+
+/**
+ * Expect an expression to not evaluate to zero.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param exp
+ *   The expression under consideration.s
+ */
+#define UK_TEST_EXPECT_NOT_ZERO(esac, exp)				\
+	UK_TEST_ASSERTF(esac,						\
+		exp != 0,						\
+		"expected `" STRINGIFY(exp) "` to not be zero"		\
+	)
+
+/**
+ * Expect two pointers to be equal to each other.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_PTR_EQ(esac, a, b)				\
+	UK_TEST_ASSERTF(esac,						\
+		(a) == (b),						\
+		"expected `" #a "` and `" #b "` to be %p "		\
+		"but was %p",						\
+		(void *)(uintptr_t)(a), (void *)(uintptr_t)(b)		\
+	)
+
+/**
+ * Expect two byte values to be equal to eachother.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_BYTES_EQ(esac, a, b, size)			\
+	UK_TEST_ASSERTF(esac,						\
+		memcmp(a, b, size) == 0,				\
+		"expected `" #a "` at %p to equal `" #b "` at %p",	\
+		(void *)(uintptr_t)(b), (void *)(uintptr_t)(a)		\
+	)
+
+/**
+ * Expect two long integers to be equal to each other.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_SNUM_EQ(esac, a, b)				\
+	UK_TEST_ASSERTF(esac,						\
+		(a) == (b),						\
+		"expected `" #a "` to be %ld "				\
+		"but was %ld",						\
+		(long)(b), (long)(a)					\
+	)
+
+/**
+ * Expect two long integers to not be equal to each other.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_SNUM_NQ(esac, a, b)				\
+	UK_TEST_ASSERTF(esac,						\
+		(a) != (b),						\
+		"expected `" #a "` to not be %ld "			\
+		"but was %ld",						\
+		(long)(b), (long)(a)					\
+	)
+
+/**
+ * Expect the left hand long integersto be greater than the right.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_SNUM_GT(esac, a, b)				\
+	UK_TEST_ASSERTF(esac,						\
+		(a) > (b),						\
+		"expected `" #a "` to be greater than %ld "		\
+		"but was %ld",						\
+		(long)(b), (long)(a)					\
+	)
+
+/**
+ * Expect the left hand long integer to be greater or equal to the right.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_SNUM_GE(esac, a, b)				\
+	UK_TEST_ASSERTF(esac,						\
+		(a) >= (b),						\
+		"expected `" #a "` to be greater than %ld "		\
+		"but was %ld",						\
+		(long)(b), (long)(a)					\
+	)
+
+/**
+ * Expect the left-hand long integerr to be less than the right.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_SNUM_LT(esac, a, b)				\
+	UK_TEST_ASSERTF(esac,						\
+		(a) < (b),						\
+		"expected `" #a "` to be less than %ld "		\
+		"but was %ld",						\
+		(long)(b), (long)(a)					\
+	)
+
+/**
+ * Expect the left-hand long integerr to be less than or equal the right.
+ *
+ * @param esac
+ *   The test case under consideration.
+ * @param a
+ *   The left-hand operand.
+ * @param b
+ *   The right-hand operand.
+ */
+#define UK_TEST_EXPECT_SNUM_LE(esac, a, b)				\
+	UK_TEST_ASSERTF(esac,						\
+		(a) <= (b),						\
+		"expected `" #a "` to be less than or equal to %ld "	\
+		"but was %ld",						\
+		(long)(b), (long)(a)					\
+	)
+
 #endif /* __UK_TEST_H__ */
