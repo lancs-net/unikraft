@@ -29,64 +29,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include <stdio.h>
-#include <limits.h>
+#ifndef __LIBUKTEST_LOG_H__
+#define __LIBUKTEST_LOG_H__
 
 #include <uk/test.h>
-#include <uk/list.h>
-#include <uk/assert.h>
-#include <uk/config.h>
-#include <uk/essentials.h>
+#include <uk/print.h>
 
-struct uk_testsuite_list uk_testsuite_list =
-	UK_TAILQ_HEAD_INITIALIZER(uk_testsuite_list);
-uint16_t testsuite_count;
+#define uk_test_printf(fmt, ...)		\
+	uk_printd("    "			\
+		  LVLC_TESTNAME ":"		\
+		  UK_ANSI_MOD_RESET "\t"	\
+		  fmt, ##__VA_ARGS__)
 
-int
-uk_testsuite_add(struct uk_testsuite *suite)
-{
-	UK_ASSERT(suite);
-	UK_TAILQ_INSERT_TAIL(&uk_testsuite_list, suite, next);
-
-	return testsuite_count++;
-}
-
-int
-uk_testsuite_run(struct uk_testsuite *suite)
-{
-	int ret = 0;
-	struct uk_testcase *testcase;
-
-	if (suite->init) {
-		ret = suite->init(suite);
-
-		if (ret != 0) {
-			uk_pr_err("Could not initialize test suite: %s",
-				  suite->name);
-			goto ERR_EXIT;
-		}
-	}
-
-	/* Reset the number of failed cases before running each case. */
-	suite->failed_cases = 0;
-
-	uk_testsuite_for_each_case(suite, testcase) {
-#ifdef CONFIG_LIBUKTEST_LOG_TESTS
-		uk_printd(LVLC_TESTNAME "test:" UK_ANSI_MOD_RESET
-			  " [%s:%s]\n",
-			  suite->name,
-			  testcase->name
-		);
-#endif /* CONFIG_LIBUKTEST_LOG_TESTS */
-
-		testcase->func(testcase);
-
-		/* If one case fails, the whole suite fails. */
-		if (testcase->failed_asserts > 0)
-			suite->failed_cases++;
-	}
-
-ERR_EXIT:
-	return ret;
-}
+#endif /* __LIBUKTEST_LOG_H__ */
