@@ -43,6 +43,155 @@ struct uk_testsuite_list uk_testsuite_list =
 	UK_TAILQ_HEAD_INITIALIZER(uk_testsuite_list);
 uint16_t testsuite_count;
 
+unsigned int
+uk_testsuite_count(void)
+{
+	return (unsigned int) testsuite_count;
+}
+
+unsigned int
+uk_testsuite_failed_count(void)
+{
+	unsigned int count = 0;
+	struct uk_testsuite *suite;
+
+	UK_TAILQ_FOREACH(suite, &uk_testsuite_list, next) {
+		if (suite->failed_cases > 0)
+			count++;
+	}
+
+	return count;
+}
+
+unsigned int
+uk_testcase_count(void)
+{
+	unsigned int count = 0;
+	struct uk_testsuite *suite;
+	struct uk_testcase *testcase;
+
+	UK_TAILQ_FOREACH(suite, &uk_testsuite_list, next) {
+		uk_testsuite_for_each_case(suite, testcase) {
+			count++;
+		}
+	}
+
+	return count;
+}
+
+unsigned int
+uk_testcase_failed_count(void)
+{
+	unsigned int count = 0;
+	struct uk_testsuite *suite;
+
+	UK_TAILQ_FOREACH(suite, &uk_testsuite_list, next) {
+		count += suite->failed_cases;
+	}
+
+	return count;
+}
+
+unsigned int
+uk_test_assert_count(void)
+{
+	unsigned int count = 0;
+	struct uk_testsuite *suite;
+	struct uk_testcase *testcase;
+
+	UK_TAILQ_FOREACH(suite, &uk_testsuite_list, next) {
+		uk_testsuite_for_each_case(suite, testcase) {
+			count += testcase->total_asserts;
+		}
+	}
+
+	return count;
+}
+
+unsigned int
+uk_test_assert_failed_count(void)
+{
+	unsigned int count = 0;
+	struct uk_testsuite *suite;
+	struct uk_testcase *testcase;
+
+	UK_TAILQ_FOREACH(suite, &uk_testsuite_list, next) {
+		uk_testsuite_for_each_case(suite, testcase) {
+			count += testcase->failed_asserts;
+		}
+	}
+
+	return count;
+}
+
+#ifdef CONFIG_LIBUKTEST_PRINT_STATS
+#include <uk/plat/console.h>
+
+#define UK_TEST_STATS_INIT_CLASS UK_INIT_CLASS_LATE
+#define UK_TEST_STATS_INIT_PRIO  9 /* As late as possible. */
+
+#if CONFIG_LIBUKDEBUG_ANSI_COLOR
+#define UK_TEST_STAT_FAILED	UK_ANSI_MOD_BOLD \
+				UK_ANSI_MOD_COLORFG(UK_ANSI_COLOR_RED)
+#else /* CONFIG_LIBUKDEBUG_ANSI_COLOR */
+#define UK_TEST_STAT_FAILED
+#endif /* !CONFIG_LIBUKDEBUG_ANSI_COLOR */
+
+static int
+uk_test_print_stats(void)
+{
+	int failed;
+
+	uk_printd("\nTest Summary:\n");
+
+	/*
+	 * Test suites
+	 */
+
+	uk_printd(" - Suites:     ");
+	failed = uk_testsuite_failed_count();
+	if (failed > 0)
+		uk_printd(UK_TEST_STAT_FAILED
+			  "%d failed"
+			  UK_ANSI_MOD_RESET
+			  ", ", failed);
+	uk_printd("%d total\n", uk_testsuite_count());
+
+	/*
+	 * Test cases
+	 */
+
+	uk_printd(" - Cases:      ");
+	failed = uk_testcase_failed_count();
+	if (failed > 0)
+		uk_printd(UK_TEST_STAT_FAILED
+			  "%d failed"
+			  UK_ANSI_MOD_RESET
+			  ", ", failed);
+	uk_printd("%d total\n", uk_testcase_count());
+
+	/*
+	 * Assertions
+	 */
+
+	uk_printd(" - Assertions: ");
+	failed = uk_test_assert_failed_count();
+	if (failed > 0)
+		uk_printd(UK_TEST_STAT_FAILED
+			  "%d failed"
+			  UK_ANSI_MOD_RESET
+			  ", ", failed);
+	uk_printd("%d total\n", uk_test_assert_count());
+
+	return 0;
+}
+uk_initcall_class_prio(
+	uk_test_print_stats,
+	UK_TEST_STATS_INIT_CLASS,
+	UK_TEST_STATS_INIT_PRIO
+);
+#endif /* CONFIG_LIBUKTEST_PRINT_STATS */
+
 int
 uk_testsuite_add(struct uk_testsuite *suite)
 {

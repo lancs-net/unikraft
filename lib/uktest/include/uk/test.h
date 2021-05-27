@@ -136,6 +136,42 @@ UK_TAILQ_HEAD(uk_testsuite_list, struct uk_testsuite);
 	for (esac = suite->cases; esac->func; esac++)
 
 /**
+ * The total number of test suites.
+ */
+unsigned int
+uk_testsuite_count(void);
+
+/**
+ * The total number of failed test suites.
+ */
+unsigned int
+uk_testsuite_failed_count(void);
+
+/**
+ * The total number of test cases in all test suites.
+ */
+unsigned int
+uk_testcase_count(void);
+
+/**
+ * The total number of failed test cases in all test suites.
+ */
+unsigned int
+uk_testcase_failed_count(void);
+
+/**
+ * The total number of assertions in all test cases.
+ */
+unsigned int
+uk_test_assert_count(void);
+
+/**
+ * The total number of failed assertions in all test cases.
+ */
+unsigned int
+uk_test_assert_failed_count(void);
+
+/**
  * Add a test suite to ther global list of available suites.
  *
  * @param suite
